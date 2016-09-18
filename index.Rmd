@@ -13,11 +13,11 @@ knitr::opts_chunk$set(cache=TRUE)
 Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
 
 #Note
-All code was putting in Appendix section for improve readability but the response of code was show. Excuseme for me poor english.
+All code was putting in Appendix section for improve readability but the response of code was show. Excuse me for my poor english.
 
 #Get data
 Get data from repositories and define that separator, decimal and quote character, and NA strings for this case "NA","#DIV/0!","".
-```{r getdata, echo=FALSE}
+```{r getdata, echo=FALSE, warning=FALSE}
 urlTraining   <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 urlTesting    <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 
@@ -62,12 +62,19 @@ testing <- testing[, (colNACount / (colNoNACount + colNoNACount)) < 0.10 ]
 
 #Split data
 Using Caret library to split training set into 2 sets (train 60% and valid 40%) to train models and valid accuracy.
-```{r split, echo=FALSE}
+```{r split, echo=FALSE, warning=FALSE}
 library(caret)
 set.seed(2804) 
 inTrain <- createDataPartition(training$classe, p = 0.6, list = FALSE)
 train <- training[inTrain, ]
 valid <- training[-inTrain, ]
+```
+Distribution of classe label was balanced thus split dataset was made without special considerations.
+```{r plotclass, echo=FALSE, fig.width=8, fig.height=2}
+library(ggplot2) 
+qplot(classe, data = training, main = "Histogram of Classe for initial training dataset")
+qplot(classe, data = train, main = "Histogram of Classe for training dataset")
+qplot(classe, data = valid, main = "Histogram of Classe for validate dataset")
 ```
 
 #Cross Validation
@@ -88,7 +95,7 @@ confusionMatrix(predRF, valid$classe)
 
 #Model Support Vector Machine
 Fit to model using Support Vector Machine with default parameters. Accuracy was calculated using confusionMatrix and for this model was 78.1% (95% CI : [0.7717, 0.7901]).
-```{r svm, echo=FALSE}
+```{r svm, echo=FALSE, warning=FALSE}
 modSVM <- train(classe ~ ., data = train, method = "svmLinear", trControl = trControl)
 predSVM <- predict(modSVM, valid)
 confusionMatrix(predSVM, valid$classe)
@@ -96,7 +103,7 @@ confusionMatrix(predSVM, valid$classe)
 
 #Model Stochastic Gradient Boosting
 Fit to model using Stochastic Gradient Boosting with default parameters. Accuracy was calculated using confusionMatrix and for this model was 96.1% (95% CI : [0.9565, 0.9652]).
-```{r gbm, echo=FALSE}
+```{r gbm, echo=FALSE, warning=FALSE}
 modGBM <- train(classe ~ ., data = train, method = "gbm", trControl = trControl, verbose = FALSE)
 predGBM <- predict(modGBM, valid)
 confusionMatrix(predGBM, valid$classe)
@@ -104,10 +111,6 @@ confusionMatrix(predGBM, valid$classe)
 
 #Decision
 The best accuracy was for Random Forest (99.17%), was good for Stochastic Gradient Boosting (96.1%) and disapoint to Support Vector Machine (78.1%).
-```{r decision, echo=FALSE}
-
-
-```
 
 #Testing
 Testing data set was evaluated with Random Forest model and was 100% accuracy when i answered the quiz in Coursera.
@@ -117,7 +120,10 @@ print(predict(modRF, newdata=testing))
 ```
 
 #References
-http://groupware.les.inf.puc-rio.br/har
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+http://groupware.les.inf.puc-rio.br/har#ixzz4KeETELOZ
+
+
 
 #Appendix
 ##R code to Get Data
@@ -132,6 +138,10 @@ http://groupware.les.inf.puc-rio.br/har
 ```{r ref.label='split', eval=FALSE}
 
 ```
+```{r ref.label='plotclass', eval=FALSE}
+
+```
+
 ##R code to Cross Validation
 ```{r ref.label='crossvalidation', eval=FALSE}
 
