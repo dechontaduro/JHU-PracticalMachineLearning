@@ -1,23 +1,22 @@
 ---
 title: "Practical Machine Learning Course Project - Weight Lifting Exercise"
-author: "Juan Carlos Gonz?lez Cardona"
+author: "Juan Carlos González Cardona"
 date: "17 de septiembre de 2016"
 output: html_document
 geometry: margin=1.5cm
 ---
-#Executive Summary
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
 
+#Background
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
 
-how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did
-
-
-Background
-
-Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
-
-
+#Note
+All code was putting in Appendix section for improve readability but the response of code was show. Excuseme for me poor english.
 
 #Get data
+Get data from repositories and define that separator, decimal and quote character, and NA strings for this case "NA","#DIV/0!","".
 ```{r getdata, echo=FALSE}
 urlTraining   <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 urlTesting    <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
@@ -43,12 +42,13 @@ getData <- function(variableName, url, filename, ...){
 }
 
 training <- getData("training", urlTraining, fileTraining, sep = ",", dec=".", quote = "\"", na.strings = c("NA","#DIV/0!",""))
-
 testing <- getData("testing", urlTesting, fileTesting, sep = ",", dec=".", quote = "\"", na.strings = c("NA","#DIV/0!",""))
 ```
 
 
-#preprocess
+#Preprocess
+Only process features, not columns like user_name, raw_timestamp_part_1, raw_timestamp_part_2, cvtd_timestamp, new_window, num_window.
+Overmore, exists a lot of features with a huge NA values, i excluded columns with less then 10% of non NA values.
 ```{r preprocess, echo=FALSE}
 training  <- training[,-c(1:7)]
 testing   <- testing[,-c(1:7)]
@@ -61,6 +61,7 @@ testing <- testing[, (colNACount / (colNoNACount + colNoNACount)) < 0.10 ]
 ```
 
 #Split data
+Using Caret library to split training set into 2 sets (train 60% and valid 40%) to train models and valid accuracy.
 ```{r split, echo=FALSE}
 library(caret)
 set.seed(2804) 
@@ -70,11 +71,14 @@ valid <- training[-inTrain, ]
 ```
 
 #Cross Validation
+I using K-fold to cross validation to minimize variance. 10 folds take a lot of time for Random Forest and Gradient Boosting. To eval performance of each model i use Accuracy that is the proportion of correct classified observation within all observations,  1 minus accuracy is my expected out of sample error.
+To config this k-fold i used trainControl and method "cv".
 ```{r crossvalidation, echo=FALSE}
-trControl <- trainControl(method = "cv", number = 2)
+trControl <- trainControl(method = "cv", number = 10)
 ```
 
 #Model Random Forest
+Fit to model using Random Forest with default parameters. Accuracy was calculated using confusionMatrix and for this model was 99.17% (95% CI : [0.9895, 0.9936]).
 ```{r randomforest, echo=FALSE}
 modRF <- train(classe ~ ., data = train, method = "rf", trControl = trControl)
 predRF <- predict(modRF, valid)
@@ -83,13 +87,15 @@ confusionMatrix(predRF, valid$classe)
 ```
 
 #Model Support Vector Machine
+Fit to model using Support Vector Machine with default parameters. Accuracy was calculated using confusionMatrix and for this model was 78.1% (95% CI : [0.7717, 0.7901]).
 ```{r svm, echo=FALSE}
 modSVM <- train(classe ~ ., data = train, method = "svmLinear", trControl = trControl)
 predSVM <- predict(modSVM, valid)
 confusionMatrix(predSVM, valid$classe)
 ```
 
-#Model GBM
+#Model Stochastic Gradient Boosting
+Fit to model using Stochastic Gradient Boosting with default parameters. Accuracy was calculated using confusionMatrix and for this model was 96.1% (95% CI : [0.9565, 0.9652]).
 ```{r gbm, echo=FALSE}
 modGBM <- train(classe ~ ., data = train, method = "gbm", trControl = trControl, verbose = FALSE)
 predGBM <- predict(modGBM, valid)
@@ -97,12 +103,14 @@ confusionMatrix(predGBM, valid$classe)
 ```
 
 #Decision
+The best accuracy was for Random Forest (99.17%), was good for Stochastic Gradient Boosting (96.1%) and disapoint to Support Vector Machine (78.1%).
 ```{r decision, echo=FALSE}
 
 
 ```
 
 #Testing
+Testing data set was evaluated with Random Forest model and was 100% accuracy when i answered the quiz in Coursera.
 ```{r testing, echo=FALSE}
 print(predict(modRF, newdata=testing))
 
@@ -110,3 +118,37 @@ print(predict(modRF, newdata=testing))
 
 #References
 http://groupware.les.inf.puc-rio.br/har
+
+#Appendix
+##R code to Get Data
+```{r ref.label='getdata', eval=FALSE}
+
+```
+##R code to Preprocess
+```{r ref.label='preprocess', eval=FALSE}
+
+```
+##R code to Split data
+```{r ref.label='split', eval=FALSE}
+
+```
+##R code to Cross Validation
+```{r ref.label='crossvalidation', eval=FALSE}
+
+```
+##R code to Model Random Forest
+```{r ref.label='randomforest', eval=FALSE}
+
+```
+##R code to Model Support Vector Machine
+```{r ref.label='svm', eval=FALSE}
+
+```
+##R code to Model Stochastic Gradient Boosting
+```{r ref.label='gbm', eval=FALSE}
+
+```
+##R code to Testing
+```{r ref.label='testing', eval=FALSE}
+
+```
