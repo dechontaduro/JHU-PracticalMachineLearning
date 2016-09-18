@@ -19,14 +19,19 @@ Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible t
 
 #Get data
 ```{r getdata, echo=FALSE}
-setwd("C:\\Users\\juanc\\Dropbox\\DataScience\\Practical Machine Learning\\Project")
-
 urlTraining   <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 urlTesting    <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+wd <- "C:\\Users\\juanc\\Dropbox\\DataScience\\Practical Machine Learning\\Project\\JHU-PracticalMachineLearning"
+filesDirectory<- "data"
 fileTraining  <- "data\\pml-training.csv"
 fileTesting   <- "data\\pml-testing.csv"
-
+setwd(wd)
 #rm(list=ls())
+
+if (!file.exists(filesDirectory)) {
+  dir.create(filesDirectory)
+ }
 
 getData <- function(variableName, url, filename, ...){
   if(!exists(variableName)){
@@ -66,13 +71,12 @@ valid <- training[-inTrain, ]
 
 #Cross Validation
 ```{r crossvalidation, echo=FALSE}
-trControl <- trainControl(method = "cv", number = 10)
+trControl <- trainControl(method = "cv", number = 2)
 ```
 
 #Model Random Forest
 ```{r randomforest, echo=FALSE}
 modRF <- train(classe ~ ., data = train, method = "rf", trControl = trControl)
-print(modRF, digits = 4)
 predRF <- predict(modRF, valid)
 
 confusionMatrix(predRF, valid$classe)
@@ -86,7 +90,7 @@ confusionMatrix(predSVM, valid$classe)
 ```
 
 #Model GBM
-```{r svm, echo=FALSE}
+```{r gbm, echo=FALSE}
 modGBM <- train(classe ~ ., data = train, method = "gbm", trControl = trControl, verbose = FALSE)
 predGBM <- predict(modGBM, valid)
 confusionMatrix(predGBM, valid$classe)
