@@ -86,7 +86,7 @@ trControl <- trainControl(method = "cv", number = 10)
 
 #Model Random Forest
 Fit to model using Random Forest with default parameters. Accuracy was calculated using confusionMatrix and for this model was 99.17% (95% CI : [0.9895, 0.9936]).
-```{r randomforest, echo=FALSE}
+```{r randomforest, echo=FALSE, warning=FALSE}
 modRF <- train(classe ~ ., data = train, method = "rf", trControl = trControl)
 predRF <- predict(modRF, valid)
 
