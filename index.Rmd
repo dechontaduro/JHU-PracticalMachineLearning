@@ -1,0 +1,108 @@
+---
+title: "Practical Machine Learning Course Project - Weight Lifting Exercise"
+author: "Juan Carlos Gonz?lez Cardona"
+date: "17 de septiembre de 2016"
+output: html_document
+geometry: margin=1.5cm
+---
+#Executive Summary
+
+
+how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did
+
+
+Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+
+
+#Get data
+```{r getdata, echo=FALSE}
+setwd("C:\\Users\\juanc\\Dropbox\\DataScience\\Practical Machine Learning\\Project")
+
+urlTraining   <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+urlTesting    <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+fileTraining  <- "data\\pml-training.csv"
+fileTesting   <- "data\\pml-testing.csv"
+
+#rm(list=ls())
+
+getData <- function(variableName, url, filename, ...){
+  if(!exists(variableName)){
+    if (!file.exists(filename)) { 
+      download.file(url, filename)
+    }
+    read.csv2(filename, ...)
+  }
+}
+
+training <- getData("training", urlTraining, fileTraining, sep = ",", dec=".", quote = "\"", na.strings = c("NA","#DIV/0!",""))
+
+testing <- getData("testing", urlTesting, fileTesting, sep = ",", dec=".", quote = "\"", na.strings = c("NA","#DIV/0!",""))
+```
+
+
+#preprocess
+```{r preprocess, echo=FALSE}
+training  <- training[,-c(1:7)]
+testing   <- testing[,-c(1:7)]
+
+colNACount    <- colSums(is.na(training)) 
+colNoNACount  <- colSums(!is.na(training))
+
+training <- training[, (colNACount / (colNoNACount + colNoNACount)) < 0.10 ]
+testing <- testing[, (colNACount / (colNoNACount + colNoNACount)) < 0.10 ]
+```
+
+#Split data
+```{r split, echo=FALSE}
+library(caret)
+set.seed(2804) 
+inTrain <- createDataPartition(training$classe, p = 0.6, list = FALSE)
+train <- training[inTrain, ]
+valid <- training[-inTrain, ]
+```
+
+#Cross Validation
+```{r crossvalidation, echo=FALSE}
+trControl <- trainControl(method = "cv", number = 10)
+```
+
+#Model Random Forest
+```{r randomforest, echo=FALSE}
+modRF <- train(classe ~ ., data = train, method = "rf", trControl = trControl)
+print(modRF, digits = 4)
+predRF <- predict(modRF, valid)
+
+confusionMatrix(predRF, valid$classe)
+```
+
+#Model Support Vector Machine
+```{r svm, echo=FALSE}
+modSVM <- train(classe ~ ., data = train, method = "svmLinear", trControl = trControl)
+predSVM <- predict(modSVM, valid)
+confusionMatrix(predSVM, valid$classe)
+```
+
+#Model GBM
+```{r svm, echo=FALSE}
+modGBM <- train(classe ~ ., data = train, method = "gbm", trControl = trControl, verbose = FALSE)
+predGBM <- predict(modGBM, valid)
+confusionMatrix(predGBM, valid$classe)
+```
+
+#Decision
+```{r decision, echo=FALSE}
+
+
+```
+
+#Testing
+```{r testing, echo=FALSE}
+print(predict(modRF, newdata=testing))
+
+```
+
+#References
+http://groupware.les.inf.puc-rio.br/har
